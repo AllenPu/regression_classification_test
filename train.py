@@ -82,7 +82,7 @@ def get_model(args):
     if args.dataset == 'cifar10':
         #model = CNN(n_outputs=10)
         model = torchvision.models.resnet18(pretrained=False)
-        model = model.load_state_dict(torch.load(args.ckpt)['model_state_dict'])
+        model.load_state_dict(torch.load(args.ckpt))
     elif args.dataset == 'cifar100':
         model = CNN(n_outputs=100)
     else:
@@ -287,11 +287,11 @@ def main(args):
         loss1, modelA = train_step(modelA, train_loader, epoch, args, opt_A, device)
 
         #### model freeze representation layers
-        modelA = model_freeze(modelA)
+        modelA, optA, freeze_layers = model_freeze(modelA)
         #### fine tune
-        loss2, modelA = train_step(modelA, train_loader_F, epoch, args, opt_A, device)
+        loss2, modelA = train_step(modelA, train_loader_F, epoch, args, optA, device)
         #### de-freeze model
-        modelA = model_defreeze(modelA)
+        modelA, opt_A = model_defreeze(modelA, freeze_layers)
 
         acc1 = test_step(modelA, test_loader, epoch, device)
         results['train_loss1'].append(loss1.detach().numpy())
@@ -304,11 +304,24 @@ def main(args):
 
 
 def model_freeze(model):
-    return model
+    all_layers = [name for name, _ in model.named_parameters()]
+    # last fc layer
+    freeze_layers = all_layers[-2:]
+    for name, values in model.named_parameters():
+        if name in freeze_layers:
+            values.requires_grad = False
+    params = filter(lambda p:p.requires_grad, model.parameters())
+    opt = optim.Adam(params, lr=args.lr, weight_decay=5e-4)
+    return model, opt, freeze_layers
 
 
-def model_defreeze(model):
-    return model
+def model_defreeze(model, freeze_layers =[]):
+    for name, values in model.named_parameters():
+        if name in freeze_layers:
+            values.requires_grad = True
+    params = filter(lambda p:p.requires_grad, model.parameters())
+    opt = optim.Adam(params, lr=args.lr, weight_decay=5e-4)
+    return model, opt
 
 
 
