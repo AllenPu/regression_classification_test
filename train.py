@@ -262,7 +262,7 @@ def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     train_loader, test_loader = get_dataset(args)
     ####
-    train_loader_F, _ = get_dataset(args, fine_tune = True)
+    train_loader_F, test_loader_F = get_dataset(args, fine_tune = True)
     #get a 20 epoch warm up model
     modelA = get_model(args)
     #modelB = get_model(args)
@@ -272,7 +272,7 @@ def main(args):
     #warm_up(train_loader, modelA, modelB, args, opt_A, opt_B, device)
 
 
-    results = {'train_loss1': [], 'test_acc@1': [], 'epoch' : []}
+    results = {'train_loss1': [], 'test_acc@1': [], 'fine_tuned_acc@1': [], 'epoch' : []}
     #start training
     for epoch in tqdm(range(1, args.epochs+1)):
         lr = args.lr
@@ -285,23 +285,26 @@ def main(args):
         #acc2 = test_step(modelB, test_loader, epoch, device)
 
         loss1, modelA = train_step(modelA, train_loader, epoch, args, opt_A, device)
-
-        #### model freeze representation layers
-        modelA, optA, freeze_layers = model_freeze(modelA)
-        #### fine tune
-        _, modelA = train_step(modelA, train_loader_F, epoch, args, optA, device)
-        #### de-freeze model
-        modelA, opt_A = model_defreeze(modelA, freeze_layers)
-
-        acc1 = test_step(modelA, test_loader, epoch, device)
         results['train_loss1'].append(loss1.detach().numpy())
-        #results['train_loss2'].append(loss2)
+        acc1 = test_step(modelA, test_loader, epoch, device)
         results['test_acc@1'].append(acc1)
         results['epoch'].append(epoch)
-        #results['test_acc@2'].append(acc2)
-        # save statistics
-        data_frame = pd.DataFrame(data=results, index=range(1, epoch + 1))
-        data_frame.to_csv('./' + '/log.csv', index_label='epoch')
+
+    #### model freeze representation layers
+    modelA, optA, freeze_layers = model_freeze(modelA)
+    #### fine tune
+    _, modelA = train_step(modelA, train_loader_F, epoch, args, optA, device)
+    #### de-freeze model
+    modelA, opt_A = model_defreeze(modelA, freeze_layers)
+
+    f_acc1 = test_step(modelA, test_loader_F, epoch, device)
+    #results['train_loss2'].append(loss2)
+    results['fine_tuned_acc@1'].append(f_acc1)
+    results['epoch'].append(epoch)
+    #results['test_acc@2'].append(acc2)
+    # save statistics
+    data_frame = pd.DataFrame(data=results, index=range(1, epoch + 1))
+    data_frame.to_csv('./' + '/log.csv', index_label='epoch')
 
 
 def model_freeze(model):
