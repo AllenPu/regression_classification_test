@@ -48,7 +48,7 @@ class CIFAR10(data.Dataset):
     def __init__(self, root, train=True,
                  transform=None, target_transform=None,
                  download=False,
-                 noise_type=None, noise_rate=0.2, random_state=0):
+                 noise_type=None, noise_rate=0.2, random_state=0, fine_tune = False):
         self.root = os.path.expanduser(root)
         self.transform = transform
         self.target_transform = target_transform
@@ -98,8 +98,11 @@ class CIFAR10(data.Dataset):
             class_2_top = class_2[:500]
             class_3_top = class_3[:500]
             total_class = class_1_top + class_2_top + class_3_top
+            #if fine_tune:
+                
             self.train_data = [self.train_data[i] for i in total_class]
             self.train_labels = [self.train_labels[i] for i in total_class]
+            
             #if noise_type is not None:
             '''
             if noise_type !='clean':
@@ -137,14 +140,27 @@ class CIFAR10(data.Dataset):
             #####
             # newly added
             #####
-            testlabel =  np.asarray([[self.test_labels[i]] for i in range(len(self.test_labels))])
-            class_2 = np.where(testlabel == 1)[0].tolist()
-            class_3 = np.where(testlabel == 2)[0].tolist()
-            class_2_top = class_2[:500]
-            class_3_top = class_3[:500]
-            total_class = class_2_top + class_3_top
+            total_class = self.train_pattern(self.train_labels, number=500)
             self.test_data = [self.test_data[i] for i in total_class]
             self.test_labels = [self.test_labels[i] for i in total_class]
+            
+
+    def train_pattern(train_labels, number = 500, fine_tune = False):
+        trainlabels = np.asarray([[train_labels[i]] for i in range(len(train_labels))])
+        class_1 = np.where(trainlabels == 0)[0].tolist()
+        class_2 = np.where(trainlabels == 1)[0].tolist()
+        class_3 = np.where(trainlabels == 2)[0].tolist()
+        if not fine_tune:
+            class_1_top = class_1[:number]
+            class_2_top = class_2[:500]
+            class_3_top = class_3[:500]        
+        else:
+            class_1_top = class_1[-500:]
+            class_2_top = class_2[-500:]
+            class_3_top = class_3[-500:] 
+        total_class = class_1_top + class_2_top + class_3_top
+
+        return total_class
 
     def __getitem__(self, index):
         '''
