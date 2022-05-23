@@ -289,7 +289,7 @@ def main(args):
         #### model freeze representation layers
         modelA, optA, freeze_layers = model_freeze(modelA)
         #### fine tune
-        loss2, modelA = train_step(modelA, train_loader_F, epoch, args, optA, device)
+        _, modelA = train_step(modelA, train_loader_F, epoch, args, optA, device)
         #### de-freeze model
         modelA, opt_A = model_defreeze(modelA, freeze_layers)
 
