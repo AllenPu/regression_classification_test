@@ -93,7 +93,7 @@ def get_model(args):
     return model
 
 
-def get_dataset(args):
+def get_dataset(args, fine_tune=False):
     """
     TODO
     """
@@ -116,7 +116,8 @@ def get_dataset(args):
                                 train=True,
                                 transform=train_transform,
                                 noise_type=args.noise_type,
-                                noise_rate=args.r
+                                noise_rate=args.r,
+                                fine_tune=fine_tune
                                 )
 
         test_dataset = CIFAR10(root='./data/',
@@ -124,7 +125,8 @@ def get_dataset(args):
                                train=False,
                                target_transform=val_transform,
                                noise_type=args.noise_type,
-                               noise_rate=args.r
+                               noise_rate=args.r,
+                               fine_tune=fine_tune
                                )
 
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -258,6 +260,8 @@ def main(args):
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     train_loader, test_loader = get_dataset(args)
+    ####
+    train_loader_F, _ = get_dataset(args, fine_tune = True)
     #get a 20 epoch warm up model
     modelA = get_model(args)
     #modelB = get_model(args)
@@ -283,8 +287,10 @@ def main(args):
 
         #### model freeze representation layers
         modelA = model_freeze(modelA)
-
         #### fine tune
+        loss2, modelA = train_step(modelA, train_loader_F, epoch, args, opt_A, device)
+        #### de-freeze model
+        modelA = model_defreeze(modelA)
 
         acc1 = test_step(modelA, test_loader, epoch, device)
         results['train_loss1'].append(loss1.detach().numpy())
@@ -299,6 +305,9 @@ def main(args):
 def model_freeze(model):
     return model
 
+
+def model_defreeze(model):
+    return model
 
 
 
