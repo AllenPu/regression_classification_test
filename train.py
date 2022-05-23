@@ -117,7 +117,8 @@ def get_dataset(args, fine_tune=False):
                                 transform=train_transform,
                                 noise_type=args.noise_type,
                                 noise_rate=args.r,
-                                fine_tune=fine_tune
+                                fine_tune=fine_tune,
+                                number= args.number
                                 )
 
         test_dataset = CIFAR10(root='./data/',
