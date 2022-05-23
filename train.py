@@ -49,6 +49,9 @@ parser.add_argument('--gpuid', default=0, type=int)
 parser.add_argument('--seed', default=123)
 parser.add_argument('--ckpt', type=str, default='prob_ckpt_epoch_1000.pth',
                     help='path to pre-trained model')
+parser.add_argument('--fine_tune', type=bool, default='if the models requires fine tune',
+                    help='fine tune')
+
 
 
 
@@ -78,7 +81,8 @@ def get_model(args):
     """
     if args.dataset == 'cifar10':
         #model = CNN(n_outputs=10)
-        model = model = torchvision.models.resnet18(pretrained=True)
+        model = torchvision.models.resnet18(pretrained=False)
+        model = model.load_state_dict(torch.load(args.ckpt)['model_state_dict'])
     elif args.dataset == 'cifar100':
         model = CNN(n_outputs=100)
     else:
@@ -276,6 +280,12 @@ def main(args):
         #acc2 = test_step(modelB, test_loader, epoch, device)
 
         loss1, modelA = train_step(modelA, train_loader, epoch, args, opt_A, device)
+
+        #### model freeze representation layers
+        modelA = model_freeze(modelA)
+
+        #### fine tune
+
         acc1 = test_step(modelA, test_loader, epoch, device)
         results['train_loss1'].append(loss1.detach().numpy())
         #results['train_loss2'].append(loss2)
@@ -284,6 +294,10 @@ def main(args):
         # save statistics
         data_frame = pd.DataFrame(data=results, index=range(1, epoch + 1))
         data_frame.to_csv('./' + '/log.csv', index_label='epoch')
+
+
+def model_freeze(model):
+    return model
 
 
 
