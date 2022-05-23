@@ -49,8 +49,8 @@ parser.add_argument('--gpuid', default=0, type=int)
 parser.add_argument('--seed', default=123)
 parser.add_argument('--ckpt', type=str, default='prob_ckpt_epoch_1000.pth',
                     help='path to pre-trained model')
-parser.add_argument('--fine_tune', type=bool, default='if the models requires fine tune',
-                    help='fine tune')
+parser.add_argument('--number', type=int, default=500,
+                    help='fine number of training data in class 0')
 
 
 
