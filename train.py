@@ -272,7 +272,7 @@ def main(args):
     #warm_up(train_loader, modelA, modelB, args, opt_A, opt_B, device)
 
 
-    results = {'train_loss1': [], 'test_acc@1': []}
+    results = {'train_loss1': [], 'test_acc@1': [], 'epoch' : []}
     #start training
     for epoch in tqdm(range(1, args.epochs+1)):
         lr = args.lr
@@ -297,6 +297,7 @@ def main(args):
         results['train_loss1'].append(loss1.detach().numpy())
         #results['train_loss2'].append(loss2)
         results['test_acc@1'].append(acc1)
+        results['epoch'].append(epoch)
         #results['test_acc@2'].append(acc2)
         # save statistics
         data_frame = pd.DataFrame(data=results, index=range(1, epoch + 1))
