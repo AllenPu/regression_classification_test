@@ -48,7 +48,7 @@ class CIFAR10(data.Dataset):
     def __init__(self, root, train=True,
                  transform=None, target_transform=None,
                  download=False,
-                 noise_type=None, noise_rate=0.2, random_state=0, fine_tune = False):
+                 noise_type=None, noise_rate=0.2, random_state=0, fine_tune = False, number = 500):
         self.root = os.path.expanduser(root)
         self.transform = transform
         self.target_transform = target_transform
@@ -88,39 +88,12 @@ class CIFAR10(data.Dataset):
             #self.train_data = self.train_data.transpose((0, 2, 3, 1))  # convert to HWC
             self.length = int(self.train_data.shape[0]/2)
 
-
-            # group the dataset by the class 
-            trainlabels=np.asarray([[self.train_labels[i]] for i in range(len(self.train_labels))])
-            class_1 = np.where(trainlabels == 0)[0].tolist()
-            class_2 = np.where(trainlabels == 1)[0].tolist()
-            class_3 = np.where(trainlabels == 2)[0].tolist()
-            class_1_top = class_1[:500]
-            class_2_top = class_2[:500]
-            class_3_top = class_3[:500]
-            total_class = class_1_top + class_2_top + class_3_top
             #if fine_tune:
-                
+            total_class = self.train_pattern(self.train_labels, number=number)
             self.train_data = [self.train_data[i] for i in total_class]
             self.train_labels = [self.train_labels[i] for i in total_class]
             
-            #if noise_type is not None:
-            '''
-            if noise_type !='clean':
-                # noisify train data
-                self.train_labels=np.asarray([[self.train_labels[i]] for i in range(len(self.train_labels))])
-                self.train_noisy_labels, self.actual_noise_rate = noisify(dataset=self.dataset, 
-                    train_labels=self.train_labels, noise_type=noise_type, noise_rate=noise_rate, random_state=random_state, nb_classes=self.nb_classes)
-                self.train_noisy_labels=np.asarray([i[0] for i in self.train_noisy_labels])
-                _train_labels=[i[0] for i in self.train_labels]
-                self.noise_or_not = np.transpose(self.train_noisy_labels)==np.transpose(_train_labels)
-            np.random.seed(123)
-            mask = np.arange(len(self.train_data))
-            np.random.shuffle(mask)
-            self.train_data = self.train_data[mask]
-            self.train_labels = self.train_labels[mask]
-            self.train_noisy_labels = self.train_noisy_labels[mask]
-            self.noise_or_not = self.noise_or_not[mask]
-            '''
+
         else:
             f = self.test_list[0][0]
             file = os.path.join(self.root, self.base_folder, f)
@@ -136,13 +109,8 @@ class CIFAR10(data.Dataset):
                 self.test_labels = entry['fine_labels']
             fo.close()
             self.test_data = self.test_data.reshape((10000, 3, 32, 32))
-            #self.test_data = self.test_data.transpose((0, 2, 3, 1))  # convert to HWC
-            #####
-            # newly added
-            #####
-            total_class = self.train_pattern(self.train_labels, number=500)
-            self.test_data = [self.test_data[i] for i in total_class]
-            self.test_labels = [self.test_labels[i] for i in total_class]
+            self.test_data = self.test_data.transpose((0, 2, 3, 1))  # convert to HWC
+
             
 
     def train_pattern(train_labels, number = 500, fine_tune = False):
