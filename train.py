@@ -31,7 +31,7 @@ parser.add_argument('--batch_size', type=int, default=64,
                     help='batch_size')
 parser.add_argument('--num_workers', type=int, default=8,
                     help='num of workers to use')
-parser.add_argument('--epochs', type=int, default=200,
+parser.add_argument('--epochs', type=int, default=100,
                     help='number of training epochs')
 # optimization
 parser.add_argument('--lr', type=float, default=0.02,
@@ -272,7 +272,7 @@ def main(args):
     #warm_up(train_loader, modelA, modelB, args, opt_A, opt_B, device)
 
 
-    results = {'train_loss1': [], 'test_acc@1': [], 'fine_tuned_acc@1': [], 'epoch' : []}
+    results = {'train_loss1': [], 'test_acc@1': [], 'epoch' : []}
     #start training
     for epoch in tqdm(range(1, args.epochs+1)):
         lr = args.lr
@@ -285,7 +285,7 @@ def main(args):
         #acc2 = test_step(modelB, test_loader, epoch, device)
 
         loss1, modelA = train_step(modelA, train_loader, epoch, args, opt_A, device)
-        results['train_loss1'].append(loss1.detach().numpy())
+        results['train_loss1'].append(loss1.cpu().detach().numpy())
         acc1 = test_step(modelA, test_loader, epoch, device)
         results['test_acc@1'].append(acc1)
         results['epoch'].append(epoch)
@@ -299,8 +299,8 @@ def main(args):
 
     f_acc1 = test_step(modelA, test_loader_F, epoch, device)
     #results['train_loss2'].append(loss2)
-    results['fine_tuned_acc@1'].append(f_acc1)
-    results['epoch'].append(epoch)
+    #results['fine_tuned_acc@1'].append(f_acc1)
+    print(" final acc is : ", f_acc1)
     #results['test_acc@2'].append(acc2)
     # save statistics
     data_frame = pd.DataFrame(data=results, index=range(1, epoch + 1))
@@ -310,7 +310,7 @@ def main(args):
 def model_freeze(model):
     all_layers = [name for name, _ in model.named_parameters()]
     # last fc layer
-    freeze_layers = all_layers[-2:]
+    freeze_layers = all_layers[:-2]
     for name, values in model.named_parameters():
         if name in freeze_layers:
             values.requires_grad = False
