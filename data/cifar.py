@@ -56,6 +56,8 @@ class CIFAR10(data.Dataset):
         self.dataset='cifar10'
         self.noise_type=noise_type
         self.nb_classes=10
+        self.number = number
+        self.fine_tune = fine_tune
 
         if download:
             self.download()
@@ -109,23 +111,32 @@ class CIFAR10(data.Dataset):
                 self.test_labels = entry['fine_labels']
             fo.close()
             self.test_data = self.test_data.reshape((10000, 3, 32, 32))
-            self.test_data = self.test_data.transpose((0, 2, 3, 1))  # convert to HWC
-
+            #self.test_data = self.test_data.transpose((0, 2, 3, 1))  # convert to HWC
+            number_per_class = int(len(self.test_labels)/10)
+            total_class = self.train_pattern(self.test_labels, number_per_class)
+            self.test_data = [self.test_data[i] for i in total_class]
+            self.test_labels = [self.test_labels[i] for i in total_class]
             
 
-    def train_pattern(train_labels, number = 500, fine_tune = False):
+    def train_pattern(self, train_labels, number = 500):
         trainlabels = np.asarray([[train_labels[i]] for i in range(len(train_labels))])
         class_1 = np.where(trainlabels == 0)[0].tolist()
         class_2 = np.where(trainlabels == 1)[0].tolist()
         class_3 = np.where(trainlabels == 2)[0].tolist()
-        if not fine_tune:
+        if not self.fine_tune and self.train:
             class_1_top = class_1[:number]
             class_2_top = class_2[:500]
             class_3_top = class_3[:500]        
-        else:
+        elif self.fine_tune and self.train:
             class_1_top = class_1[-500:]
             class_2_top = class_2[-500:]
             class_3_top = class_3[-500:] 
+        elif not self.train:
+            class_1_top = []
+            class_2_top = class_2[:number]
+            class_3_top = class_3[:number]
+        else:
+            print(" no running error! ")
         total_class = class_1_top + class_2_top + class_3_top
 
         return total_class
