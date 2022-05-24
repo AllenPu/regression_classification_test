@@ -295,7 +295,7 @@ def main(args):
     #### fine tune
     _, modelA = train_step(modelA, train_loader_F, epoch, args, optA, device)
     #### de-freeze model
-    modelA, opt_A = model_defreeze(modelA, freeze_layers)
+    #modelA, opt_A = model_defreeze(modelA, freeze_layers)
 
     f_acc1 = test_step(modelA, test_loader_F, epoch, device)
     #results['train_loss2'].append(loss2)
