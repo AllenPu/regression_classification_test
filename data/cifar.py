@@ -142,26 +142,6 @@ class CIFAR10(data.Dataset):
         return total_class
 
     def __getitem__(self, index):
-        '''
-        if self.train:
-            if self.noise_type !='clean':
-                img1, target1, real_target1 = self.train_data[index+self.length], self.train_noisy_labels[index+self.length], self.train_labels[index+self.length]
-                img2, target2, real_target2 = self.train_data[index], self.train_noisy_labels[index], self.train_labels[index]
-                img1 = self.transform(img1)
-                img2 = self.transform(img2)
-                return img1, img2, target1, target2, real_target1, real_target2
-            else:
-                img1, target1, real_target1 = self.train_data[index+self.length], self.train_labels[index+self.length], self.train_labels[index+self.length]
-                img2, target2, real_target2 = self.train_data[index], self.train_labels[index], self.train_labels[index]
-                img1 = self.transform(img1)
-                img2 = self.transform(img2)
-                return img1, img2, target1, target2, real_target1, real_target2
-        else:
-            img, target = self.test_data[index], self.test_labels[index]
-            img = Image.fromarray(img)
-            img = self.target_transform(img)
-            return img, target
-        '''
         if self.train:
             img, target= self.train_data[index], self.train_labels[index]
         else:
