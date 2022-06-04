@@ -82,7 +82,14 @@ def get_model(args):
     if args.dataset == 'cifar10':
         #model = CNN(n_outputs=10)
         model = torchvision.models.resnet18(pretrained=False)
-        model.load_state_dict(torch.load(args.ckpt))
+        #model.load_state_dict(torch.load(args.ckpt))
+        fc_inputs = model.fc.in_features
+        model.fc = nn.Sequential(
+            nn.Linear(fc_inputs, 256),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(256, 10)
+        )
     elif args.dataset == 'cifar100':
         model = CNN(n_outputs=100)
     else:
